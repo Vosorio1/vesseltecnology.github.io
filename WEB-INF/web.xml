@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee 
+         https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <display-name>Vessel Tecnology SAS - Sistema Integrado</display-name>
+    <description>Sistema de Gestion: Inventario, Contabilidad y Operaciones Navales</description>
+
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+        <welcome-file>login.html</welcome-file>
+    </welcome-file-list>
+
+    <!-- AuthServlet - Login y Autenticacion -->
+    <servlet>
+        <servlet-name>AuthServlet</servlet-name>
+        <servlet-class>controller.AuthServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AuthServlet</servlet-name>
+        <url-pattern>/api/auth/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- DashboardServlet - Panel Consolidado -->
+    <servlet>
+        <servlet-name>DashboardServlet</servlet-name>
+        <servlet-class>controller.DashboardServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DashboardServlet</servlet-name>
+        <url-pattern>/api/dashboard</url-pattern>
+    </servlet-mapping>
+
+    <!-- InventarioServlet - CRUD Inventario -->
+    <servlet>
+        <servlet-name>InventarioServlet</servlet-name>
+        <servlet-class>controller.InventarioServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>InventarioServlet</servlet-name>
+        <url-pattern>/api/inventario/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- ContabilidadServlet - Transacciones -->
+    <servlet>
+        <servlet-name>ContabilidadServlet</servlet-name>
+        <servlet-class>controller.ContabilidadServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ContabilidadServlet</servlet-name>
+        <url-pattern>/api/contabilidad/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- OperacionesServlet - Operaciones Navales -->
+    <servlet>
+        <servlet-name>OperacionesServlet</servlet-name>
+        <servlet-class>controller.OperacionesServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>OperacionesServlet</servlet-name>
+        <url-pattern>/api/operaciones/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- AuditoriaServlet - Bitacora / trazabilidad del sistema -->
+    <servlet>
+        <servlet-name>AuditoriaServlet</servlet-name>
+        <servlet-class>controller.AuditoriaServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AuditoriaServlet</servlet-name>
+        <url-pattern>/api/auditoria</url-pattern>
+    </servlet-mapping>
+
+    <!-- EmpleadoServlet - Maestro de empleados (Nomina) -->
+    <servlet>
+        <servlet-name>EmpleadoServlet</servlet-name>
+        <servlet-class>controller.EmpleadoServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>EmpleadoServlet</servlet-name>
+        <url-pattern>/api/empleados/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- NominaServlet - Liquidacion de nomina -->
+    <servlet>
+        <servlet-name>NominaServlet</servlet-name>
+        <servlet-class>controller.NominaServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>NominaServlet</servlet-name>
+        <url-pattern>/api/nomina/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- AuthFilter - Proteccion de paginas internas del lado del servidor -->
+    <filter>
+        <filter-name>AuthFilter</filter-name>
+        <filter-class>controller.AuthFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/dashboard.html</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/inventario.html</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/contabilidad.html</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/operaciones.html</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/auditoria.html</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/nomina.html</url-pattern>
+    </filter-mapping>
+
+</web-app>
