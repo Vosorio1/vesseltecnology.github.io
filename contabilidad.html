@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contabilidad - Vessel Technology SAS</title>
+    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="img/favicon-32.png" type="image/png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <span class="icon"><img src="img/emblema-navbar.png" alt="Vessel Tecnology SAS"></span>
+            <span>Vessel Technology SAS</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="inventario.html">Inventario</a></li>
+            <li><a href="contabilidad.html" class="active">Contabilidad</a></li>
+            <li><a href="operaciones.html">Operaciones</a></li>
+            <li><a href="nomina.html" id="navNomina" style="display:none;">Nomina</a></li>
+            <li><a href="auditoria.html" id="navAuditoria" style="display:none;">Auditoria</a></li>
+            <li><a href="#" onclick="logout()">Salir</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-container">
+        <h1>Modulo de Contabilidad</h1>
+        <p class="subtitle">Control financiero y gestion de transacciones</p>
+
+        <div class="summary-cards summary-cards-5">
+            <div class="summary-card income">
+                <h4>Total Ingresos</h4>
+                <div id="sumIngresos">$0</div>
+            </div>
+            <div class="summary-card expense">
+                <h4>Total Egresos</h4>
+                <div id="sumEgresos">$0</div>
+            </div>
+            <div class="summary-card balance">
+                <h4>Balance</h4>
+                <div id="sumBalance">$0</div>
+            </div>
+            <div class="summary-card cobrar">
+                <h4>Cuentas por Cobrar</h4>
+                <div id="sumPorCobrar">$0</div>
+                <span class="summary-sub" id="cantPorCobrar"></span>
+            </div>
+            <div class="summary-card pagar">
+                <h4>Cuentas por Pagar</h4>
+                <div id="sumPorPagar">$0</div>
+                <span class="summary-sub" id="cantPorPagar"></span>
+            </div>
+        </div>
+        <div id="alertaVencidas" class="message error" style="display:none; margin-bottom:16px;"></div>
+
+        <div class="actions-bar">
+            <button class="btn-primary" onclick="showAddForm()">+ Nueva Transaccion</button>
+        </div>
+
+        <div id="addForm" class="form-panel" style="display:none;">
+            <h3>Registrar Transaccion</h3>
+            <form id="transForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="tipo">
+                            <option value="ingreso">Ingreso</option>
+                            <option value="egreso">Egreso</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select id="catTrans">
+                            <option value="ventas">Ventas</option>
+                            <option value="compras">Compras</option>
+                            <option value="nomina">Nomina</option>
+                            <option value="servicios">Servicios</option>
+                            <option value="mantenimiento">Mantenimiento</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Concepto</label>
+                    <input type="text" id="concepto" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Monto (COP)</label>
+                        <input type="number" id="monto" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha</label>
+                        <input type="date" id="fechaTrans" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Referencia</label>
+                        <input type="text" id="referencia">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Metodo de Pago</label>
+                        <select id="metodoPago">
+                            <option value="transferencia">Transferencia</option>
+                            <option value="efectivo">Efectivo</option>
+                            <option value="cheque">Cheque</option>
+                            <option value="credito">Credito</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="estadoTrans" onchange="toggleVencimiento()">
+                            <option value="completado">Completado (ya pagado/cobrado)</option>
+                            <option value="pendiente">Pendiente (por pagar/cobrar)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="grupoVencimiento" style="display:none;">
+                        <label>Fecha de vencimiento</label>
+                        <input type="date" id="fechaVencimiento">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Responsable</label>
+                        <input type="text" id="responsable">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">Guardar</button>
+                <button type="button" class="btn-secondary" onclick="hideAddForm()">Cancelar</button>
+            </form>
+        </div>
+
+        <div class="table-container">
+            <table id="contaTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tipo</th>
+                        <th>Concepto</th>
+                        <th>Monto</th>
+                        <th>Categoria</th>
+                        <th>Fecha</th>
+                        <th>Referencia</th>
+                        <th>Estado</th>
+                        <th>Vencimiento</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'api/contabilidad';
+
+        async function loadData() {
+            try {
+                // Resumen
+                const resSum = await fetch(API_URL + '/resumen');
+                const sumData = await resSum.json();
+                if (sumData.success) {
+                    const s = sumData.data;
+                    document.getElementById('sumIngresos').textContent = '$' + s.totalIngresos.toLocaleString();
+                    document.getElementById('sumEgresos').textContent = '$' + s.totalEgresos.toLocaleString();
+                    document.getElementById('sumBalance').textContent = '$' + s.balance.toLocaleString();
+                    document.getElementById('sumPorCobrar').textContent = '$' + s.cuentasPorCobrar.toLocaleString();
+                    document.getElementById('sumPorPagar').textContent = '$' + s.cuentasPorPagar.toLocaleString();
+                    document.getElementById('cantPorCobrar').textContent = s.cantidadPorCobrar + ' factura(s) pendiente(s)';
+                    document.getElementById('cantPorPagar').textContent = s.cantidadPorPagar + ' factura(s) pendiente(s)';
+
+                    const alerta = document.getElementById('alertaVencidas');
+                    if (s.cuentasVencidas > 0) {
+                        alerta.style.display = 'block';
+                        alerta.textContent = 'Tienes ' + s.cuentasVencidas + ' cuenta(s) pendiente(s) vencida(s). Revisa la columna Vencimiento en la tabla.';
+                    } else {
+                        alerta.style.display = 'none';
+                    }
+                }
+
+                // Transacciones
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                if (data.success) {
+                    const hoy = new Date().toISOString().slice(0,10);
+                    document.getElementById('tableBody').innerHTML = data.data.map(t => {
+                        const vencida = t.estado === 'pendiente' && t.fechaVencimiento && t.fechaVencimiento < hoy;
+                        return `
+                        <tr${vencida ? ' class="row-vencida"' : ''}>
+                            <td>${t.id}</td>
+                            <td><span class="badge ${t.tipoTransaccion}">${t.tipoTransaccion}</span></td>
+                            <td>${t.concepto}</td>
+                            <td>$${t.monto.toLocaleString()}</td>
+                            <td>${t.categoria}</td>
+                            <td>${t.fechaTransaccion}</td>
+                            <td>${t.referencia || '-'}</td>
+                            <td><span class="badge ${t.estado}">${t.estado}</span></td>
+                            <td>${t.fechaVencimiento ? (vencida ? '<strong class="text-danger">' + t.fechaVencimiento + ' (vencida)</strong>' : t.fechaVencimiento) : '-'}</td>
+                        </tr>
+                    `;}).join('');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function toggleVencimiento() {
+            document.getElementById('grupoVencimiento').style.display =
+                document.getElementById('estadoTrans').value === 'pendiente' ? 'block' : 'none';
+        }
+
+        function showAddForm() {
+            document.getElementById('transForm').reset();
+            toggleVencimiento();
+            document.getElementById('addForm').style.display = 'block';
+        }
+        function hideAddForm() { document.getElementById('addForm').style.display = 'none'; }
+
+        document.getElementById('transForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const trans = {
+                tipoTransaccion: document.getElementById('tipo').value,
+                concepto: document.getElementById('concepto').value,
+                monto: parseFloat(document.getElementById('monto').value),
+                categoria: document.getElementById('catTrans').value,
+                fechaTransaccion: document.getElementById('fechaTrans').value,
+                referencia: document.getElementById('referencia').value,
+                metodoPago: document.getElementById('metodoPago').value,
+                estado: document.getElementById('estadoTrans').value,
+                fechaVencimiento: document.getElementById('fechaVencimiento').value,
+                responsable: document.getElementById('responsable').value,
+                observaciones: ''
+            };
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(trans)
+                });
+                const data = await res.json();
+                if (data.success) { hideAddForm(); loadData(); }
+                else alert(data.error || 'Error');
+            } catch (e) { alert('Error de conexion'); }
+        });
+
+        function logout() {
+            localStorage.removeItem('user');
+            fetch('api/auth/logout');
+            window.location.href = 'index.html';
+        }
+
+        const __user = localStorage.getItem('user');
+        if (!__user) window.location.href = 'login.html';
+        else {
+            const __u = JSON.parse(__user);
+            if (__u.rol === 'admin') {
+                const navAud = document.getElementById('navAuditoria');
+                if (navAud) navAud.style.display = 'inline';
+                const navNom = document.getElementById('navNomina');
+                if (navNom) navNom.style.display = 'inline';
+            }
+        }
+        loadData();
+    </script>
+</body>
+</html>

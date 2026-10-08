@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nomina - Vessel Technology SAS</title>
+    <link rel="stylesheet" href="css/style.css?v=4">
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="img/favicon-32.png" type="image/png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <span class="icon"><img src="img/emblema-navbar.png" alt="Vessel Tecnology SAS"></span>
+            <span>Vessel Technology SAS</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="inventario.html">Inventario</a></li>
+            <li><a href="contabilidad.html">Contabilidad</a></li>
+            <li><a href="operaciones.html">Operaciones</a></li>
+            <li><a href="nomina.html" class="active">Nomina</a></li>
+            <li><a href="auditoria.html" id="navAuditoria" style="display:none;">Auditoria</a></li>
+            <li><a href="#" onclick="logout()">Salir</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-container">
+        <h1>Nomina y Liquidaciones</h1>
+        <p class="subtitle">Liquidacion de sueldo, prestaciones sociales, horas extra y recargos (Ley 2101/2021)</p>
+
+        <div class="actions-bar">
+            <button class="btn-primary" onclick="toggleEmpleadoForm()">+ Nuevo Empleado</button>
+            <button class="btn-secondary" onclick="toggleEmpleados()">Ver empleados</button>
+        </div>
+
+        <div id="empleadoForm" class="form-panel" style="display:none;">
+            <h3>Registrar Empleado</h3>
+            <form id="formEmpleado">
+                <div class="form-row">
+                    <div class="form-group"><label>Cedula</label><input type="text" id="empCedula" required></div>
+                    <div class="form-group"><label>Nombre completo</label><input type="text" id="empNombre" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Cargo</label><input type="text" id="empCargo" required></div>
+                    <div class="form-group"><label>Tipo de contrato</label><input type="text" id="empTipoContrato" placeholder="Ej: Fijo 3 meses, Indefinido" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Fecha inicio contrato</label><input type="date" id="empFechaInicio" required></div>
+                    <div class="form-group"><label>Fecha fin contrato</label><input type="date" id="empFechaFin"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Salario base (COP)</label><input type="number" id="empSalario" required></div>
+                    <div class="form-group"><label>Auxilio de transporte (COP)</label><input type="number" id="empAuxilio" value="0"></div>
+                </div>
+                <button type="submit" class="btn-primary">Guardar Empleado</button>
+                <button type="button" class="btn-secondary" onclick="toggleEmpleadoForm()">Cancelar</button>
+            </form>
+        </div>
+
+        <div id="empleadosPanel" class="table-container" style="display:none; margin-bottom:24px;">
+            <table>
+                <thead><tr><th>Cedula</th><th>Nombre</th><th>Cargo</th><th>Contrato</th><th>Salario base</th><th>Auxilio</th><th>Estado</th></tr></thead>
+                <tbody id="empleadosBody"></tbody>
+            </table>
+        </div>
+
+        <div class="form-panel">
+            <h3>Generar Liquidacion</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Empleado</label>
+                    <select id="liqEmpleado" onchange="autocompletarEmpleado()"></select>
+                </div>
+                <div class="form-group">
+                    <label>Mes</label>
+                    <select id="liqMes">
+                        <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+                        <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+                        <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+                        <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Ano</label>
+                    <input type="number" id="liqAnio" value="2026">
+                </div>
+                <div class="form-group">
+                    <label>Dias del periodo</label>
+                    <input type="number" id="liqDias" value="30">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group"><label>Salario base (COP)</label><input type="number" id="liqSalario" required></div>
+                <div class="form-group"><label>Auxilio de transporte (COP)</label><input type="number" id="liqAuxilio" value="0"></div>
+                <div class="form-group"><label>Bonos no prestacionales (COP)</label><input type="number" id="liqBonos" value="0"></div>
+            </div>
+            <div class="form-group">
+                <label>Descripcion de bonos</label>
+                <input type="text" id="liqBonosDesc" placeholder="Ej: Bono fijo no prestacional + auxilio alimentacion + bono cumplimiento">
+            </div>
+
+            <h4 class="section-subtitle">Horas extra y recargos del periodo</h4>
+            <div class="horas-grid">
+                <div class="form-group"><label>HED &mdash; Extra diurna (25%)</label><input type="number" id="hHed" value="0" step="0.5"></div>
+                <div class="form-group"><label>RN &mdash; Recargo nocturno (35%)</label><input type="number" id="hRn" value="0" step="0.5"></div>
+                <div class="form-group"><label>HEN &mdash; Extra nocturna (75%)</label><input type="number" id="hHen" value="0" step="0.5"></div>
+                <div class="form-group"><label>RDF &mdash; Recargo dom/fest diurno (90%)</label><input type="number" id="hRdf" value="0" step="0.5"></div>
+                <div class="form-group"><label>RNDF &mdash; Recargo dom/fest noct (125%)</label><input type="number" id="hRndf" value="0" step="0.5"></div>
+                <div class="form-group"><label>HEDDF &mdash; Extra diurna dom/fest (115%)</label><input type="number" id="hHeddf" value="0" step="0.5"></div>
+                <div class="form-group"><label>HENDF &mdash; Extra nocturna dom/fest (165%)</label><input type="number" id="hHendf" value="0" step="0.5"></div>
+            </div>
+
+            <h4 class="section-subtitle">Deducciones ocasionales</h4>
+            <div class="form-row">
+                <div class="form-group"><label>Fondo solidaridad pensional (COP)</label><input type="number" id="liqFondoSol" value="0"></div>
+                <div class="form-group"><label>Retencion en la fuente (COP)</label><input type="number" id="liqRetefuente" value="0"></div>
+                <div class="form-group"><label>Otros descuentos (COP)</label><input type="number" id="liqOtros" value="0"></div>
+            </div>
+            <div class="form-group">
+                <label>Descripcion de otros descuentos</label>
+                <input type="text" id="liqOtrosDesc" placeholder="Ej: Anticipo de nomina, prestamo, dotacion no devuelta...">
+            </div>
+
+            <button type="button" class="btn-secondary" onclick="calcularLiquidacion()">Calcular</button>
+            <button type="button" class="btn-primary" onclick="guardarLiquidacion()">Calcular y Guardar</button>
+        </div>
+
+        <div id="reciboPanel" class="form-panel recibo" style="display:none;">
+            <h3>Detalle de la liquidacion</h3>
+            <div class="recibo-grid">
+                <div class="recibo-col">
+                    <h4>A) Devengado</h4>
+                    <div class="recibo-row"><span>Salario base</span><span id="rSalario">-</span></div>
+                    <div class="recibo-row"><span>Auxilio de transporte</span><span id="rAuxilio">-</span></div>
+                    <div class="recibo-row"><span>Bonos no prestacionales</span><span id="rBonos">-</span></div>
+                    <div class="recibo-row"><span>Horas extra y recargos</span><span id="rHorasExtra">-</span></div>
+                    <div class="recibo-row total"><span>Total devengado</span><span id="rTotalDevengado">-</span></div>
+
+                    <h4 style="margin-top:16px;">B) Deducciones</h4>
+                    <div class="recibo-row"><span>Salud (4%)</span><span id="rSalud">-</span></div>
+                    <div class="recibo-row"><span>Pension (4%)</span><span id="rPension">-</span></div>
+                    <div class="recibo-row"><span>Fondo solidaridad</span><span id="rFondoSol">-</span></div>
+                    <div class="recibo-row"><span>Retencion en la fuente</span><span id="rRetefuente">-</span></div>
+                    <div class="recibo-row"><span>Otros descuentos</span><span id="rOtros">-</span></div>
+                    <div class="recibo-row total"><span>Total deducciones</span><span id="rTotalDeducciones">-</span></div>
+
+                    <div class="recibo-row neto"><span>NETO A PAGAR</span><span id="rNeto">-</span></div>
+                </div>
+                <div class="recibo-col">
+                    <h4>Aportes y prestaciones a cargo del empleador (informativo)</h4>
+                    <div class="recibo-row"><span>Caja de compensacion (4%)</span><span id="rCaja">-</span></div>
+                    <div class="recibo-row"><span>Pension empleador (12%)</span><span id="rPensionEmp">-</span></div>
+                    <div class="recibo-row"><span>ARL (0.522%)</span><span id="rArl">-</span></div>
+                    <div class="recibo-row"><span>Cesantias (8.33%)</span><span id="rCesantias">-</span></div>
+                    <div class="recibo-row"><span>Intereses cesantias (1%)</span><span id="rIntCesantias">-</span></div>
+                    <div class="recibo-row"><span>Prima de servicios (8.33%)</span><span id="rPrima">-</span></div>
+                    <div class="recibo-row"><span>Vacaciones (4.17%)</span><span id="rVacaciones">-</span></div>
+                    <div class="recibo-row total"><span>Costo total para la empresa</span><span id="rCostoTotal">-</span></div>
+                </div>
+            </div>
+            <div id="reciboMensaje" class="message" style="display:none; margin-top:14px;"></div>
+        </div>
+
+        <div class="actions-bar" style="margin-top:28px;">
+            <h3 style="margin:0;">Liquidaciones guardadas</h3>
+            <div>
+                <select id="filtroMes" onchange="cargarLiquidaciones()">
+                    <option value="">Todos los periodos</option>
+                    <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+                    <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+                    <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+                    <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+                </select>
+                <input type="number" id="filtroAnio" value="2026" style="width:90px;" onchange="cargarLiquidaciones()">
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>Periodo</th><th>Empleado</th><th>Devengado</th><th>Deducciones</th><th>Neto</th><th>Costo empresa</th><th>Estado</th></tr>
+                </thead>
+                <tbody id="liquidacionesBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let empleados = [];
+        const MESES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+        function money(v) { return '$' + Number(v || 0).toLocaleString('es-CO', {minimumFractionDigits: 0}); }
+
+        async function cargarEmpleados() {
+            try {
+                const res = await fetch('api/empleados');
+                const data = await res.json();
+                if (data.success) {
+                    empleados = data.data;
+                    const sel = document.getElementById('liqEmpleado');
+                    sel.innerHTML = empleados.map(e => `<option value="${e.id}">${e.nombreCompleto} - ${e.cargo}</option>`).join('');
+                    document.getElementById('empleadosBody').innerHTML = empleados.map(e => `
+                        <tr>
+                            <td class="mono">${e.cedula}</td>
+                            <td>${e.nombreCompleto}</td>
+                            <td>${e.cargo}</td>
+                            <td>${e.tipoContrato}</td>
+                            <td>${money(e.salarioBase)}</td>
+                            <td>${money(e.auxilioTransporte)}</td>
+                            <td><span class="badge ${e.estado}">${e.estado}</span></td>
+                        </tr>
+                    `).join('');
+                    if (empleados.length > 0) autocompletarEmpleado();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function autocompletarEmpleado() {
+            const id = parseInt(document.getElementById('liqEmpleado').value);
+            const emp = empleados.find(e => e.id === id);
+            if (emp) {
+                document.getElementById('liqSalario').value = emp.salarioBase;
+                document.getElementById('liqAuxilio').value = emp.auxilioTransporte;
+            }
+        }
+
+        function toggleEmpleadoForm() {
+            const p = document.getElementById('empleadoForm');
+            p.style.display = p.style.display === 'none' ? 'block' : 'none';
+        }
+        function toggleEmpleados() {
+            const p = document.getElementById('empleadosPanel');
+            p.style.display = p.style.display === 'none' ? 'block' : 'none';
+        }
+
+        document.getElementById('formEmpleado').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const emp = {
+                cedula: document.getElementById('empCedula').value,
+                nombreCompleto: document.getElementById('empNombre').value,
+                cargo: document.getElementById('empCargo').value,
+                tipoContrato: document.getElementById('empTipoContrato').value,
+                fechaInicioContrato: document.getElementById('empFechaInicio').value,
+                fechaFinContrato: document.getElementById('empFechaFin').value,
+                salarioBase: parseFloat(document.getElementById('empSalario').value),
+                auxilioTransporte: parseFloat(document.getElementById('empAuxilio').value) || 0,
+                estado: 'activo'
+            };
+            try {
+                const res = await fetch('api/empleados', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(emp) });
+                const data = await res.json();
+                if (data.success) { toggleEmpleadoForm(); document.getElementById('formEmpleado').reset(); cargarEmpleados(); }
+                else alert(data.error || 'Error creando empleado');
+            } catch (e) { alert('Error de conexion'); }
+        });
+
+        function construirPayloadLiquidacion() {
+            return {
+                empleadoId: parseInt(document.getElementById('liqEmpleado').value),
+                mes: parseInt(document.getElementById('liqMes').value),
+                anio: parseInt(document.getElementById('liqAnio').value),
+                diasPeriodo: parseInt(document.getElementById('liqDias').value) || 30,
+                salarioBase: parseFloat(document.getElementById('liqSalario').value) || 0,
+                auxilioTransporte: parseFloat(document.getElementById('liqAuxilio').value) || 0,
+                bonosNoPrestacionales: parseFloat(document.getElementById('liqBonos').value) || 0,
+                bonosDescripcion: document.getElementById('liqBonosDesc').value,
+                horasHed: parseFloat(document.getElementById('hHed').value) || 0,
+                horasRn: parseFloat(document.getElementById('hRn').value) || 0,
+                horasHen: parseFloat(document.getElementById('hHen').value) || 0,
+                horasRdf: parseFloat(document.getElementById('hRdf').value) || 0,
+                horasRndf: parseFloat(document.getElementById('hRndf').value) || 0,
+                horasHeddf: parseFloat(document.getElementById('hHeddf').value) || 0,
+                horasHendf: parseFloat(document.getElementById('hHendf').value) || 0,
+                fondoSolidaridad: parseFloat(document.getElementById('liqFondoSol').value) || 0,
+                retencionFuente: parseFloat(document.getElementById('liqRetefuente').value) || 0,
+                otrosDescuentos: parseFloat(document.getElementById('liqOtros').value) || 0,
+                otrosDescuentosDesc: document.getElementById('liqOtrosDesc').value
+            };
+        }
+
+        function pintarRecibo(n) {
+            document.getElementById('rSalario').textContent = money(n.salarioBase);
+            document.getElementById('rAuxilio').textContent = money(n.auxilioTransporte);
+            document.getElementById('rBonos').textContent = money(n.bonosNoPrestacionales);
+            document.getElementById('rHorasExtra').textContent = money(n.valorHorasExtra);
+            document.getElementById('rTotalDevengado').textContent = money(n.totalDevengado);
+            document.getElementById('rSalud').textContent = money(n.deduccionSalud);
+            document.getElementById('rPension').textContent = money(n.deduccionPension);
+            document.getElementById('rFondoSol').textContent = money(n.fondoSolidaridad);
+            document.getElementById('rRetefuente').textContent = money(n.retencionFuente);
+            document.getElementById('rOtros').textContent = money(n.otrosDescuentos);
+            document.getElementById('rTotalDeducciones').textContent = money(n.totalDeducciones);
+            document.getElementById('rNeto').textContent = money(n.netoPagar);
+            document.getElementById('rCaja').textContent = money(n.aporteCajaCompensacion);
+            document.getElementById('rPensionEmp').textContent = money(n.aportePensionEmpleador);
+            document.getElementById('rArl').textContent = money(n.aporteArl);
+            document.getElementById('rCesantias').textContent = money(n.aporteCesantias);
+            document.getElementById('rIntCesantias').textContent = money(n.aporteInteresesCesantias);
+            document.getElementById('rPrima').textContent = money(n.aportePrimaServicios);
+            document.getElementById('rVacaciones').textContent = money(n.aporteVacaciones);
+            document.getElementById('rCostoTotal').textContent = money(n.costoTotalEmpresa);
+            document.getElementById('reciboPanel').style.display = 'block';
+        }
+
+        async function calcularLiquidacion() {
+            const payload = construirPayloadLiquidacion();
+            if (!payload.empleadoId || !payload.salarioBase) { alert('Selecciona un empleado y verifica el salario base'); return; }
+            try {
+                const res = await fetch('api/nomina/calcular', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                const data = await res.json();
+                if (data.success) {
+                    pintarRecibo(data.data);
+                    document.getElementById('reciboMensaje').style.display = 'none';
+                } else {
+                    alert(data.error || 'No fue posible calcular la liquidacion');
+                }
+            } catch (e) { alert('Error de conexion'); }
+        }
+
+        async function guardarLiquidacion() {
+            const payload = construirPayloadLiquidacion();
+            if (!payload.empleadoId || !payload.salarioBase) { alert('Selecciona un empleado y verifica el salario base'); return; }
+            try {
+                const res = await fetch('api/nomina', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                const data = await res.json();
+                const msg = document.getElementById('reciboMensaje');
+                if (data.success) {
+                    pintarRecibo(data.data);
+                    msg.className = 'message success';
+                    msg.textContent = 'Liquidacion guardada correctamente para el periodo ' + MESES[payload.mes] + ' ' + payload.anio + '.';
+                    msg.style.display = 'block';
+                    cargarLiquidaciones();
+                } else {
+                    msg.className = 'message error';
+                    msg.textContent = data.error || 'No fue posible guardar la liquidacion';
+                    msg.style.display = 'block';
+                }
+            } catch (e) { alert('Error de conexion'); }
+        }
+
+        async function cargarLiquidaciones() {
+            const mes = document.getElementById('filtroMes').value;
+            const anio = document.getElementById('filtroAnio').value;
+            let url = 'api/nomina';
+            if (mes) url += `?mes=${mes}&anio=${anio}`;
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('liquidacionesBody').innerHTML = data.data.map(n => `
+                        <tr>
+                            <td>${MESES[n.mes]} ${n.anio}</td>
+                            <td>${n.nombreEmpleado}</td>
+                            <td>${money(n.totalDevengado)}</td>
+                            <td>${money(n.totalDeducciones)}</td>
+                            <td><strong>${money(n.netoPagar)}</strong></td>
+                            <td>${money(n.costoTotalEmpresa)}</td>
+                            <td><span class="badge ${n.estado}">${n.estado}</span></td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="7" style="text-align:center;">No hay liquidaciones para este periodo</td></tr>';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            fetch('api/auth/logout');
+            window.location.href = 'index.html';
+        }
+
+        const __user = localStorage.getItem('user');
+        if (!__user) window.location.href = 'login.html';
+        else {
+            const __u = JSON.parse(__user);
+            if (__u.rol !== 'admin') {
+                alert('Solo un administrador puede acceder al modulo de Nomina');
+                window.location.href = 'dashboard.html';
+            }
+            const navAud = document.getElementById('navAuditoria');
+            if (navAud) navAud.style.display = 'inline';
+        }
+
+        cargarEmpleados();
+        cargarLiquidaciones();
+    </script>
+</body>
+</html>

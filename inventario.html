@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario - Vessel Technology SAS</title>
+    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="img/favicon-32.png" type="image/png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <span class="icon"><img src="img/emblema-navbar.png" alt="Vessel Tecnology SAS"></span>
+            <span>Vessel Technology SAS</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="inventario.html" class="active">Inventario</a></li>
+            <li><a href="contabilidad.html">Contabilidad</a></li>
+            <li><a href="operaciones.html">Operaciones</a></li>
+            <li><a href="nomina.html" id="navNomina" style="display:none;">Nomina</a></li>
+            <li><a href="auditoria.html" id="navAuditoria" style="display:none;">Auditoria</a></li>
+            <li><a href="#" onclick="logout()">Salir</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-container">
+        <h1>Modulo de Inventario</h1>
+        <p class="subtitle">Gestion de productos, equipos y materiales de seguridad electronica y redes</p>
+
+        <div class="actions-bar">
+            <button class="btn-primary" onclick="showAddForm()">+ Nuevo Producto</button>
+            <input type="text" id="searchInput" placeholder="Buscar producto..." onkeyup="searchProducts()">
+        </div>
+
+        <div id="addForm" class="form-panel" style="display:none;">
+            <h3 id="formTitle">Agregar Producto</h3>
+            <form id="productForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Codigo</label>
+                        <input type="text" id="codigo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="nombre" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Descripcion</label>
+                    <textarea id="descripcion"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select id="categoria">
+                            <option value="repuestos">Repuestos</option>
+                            <option value="equipos">Equipos</option>
+                            <option value="consumibles">Consumibles</option>
+                            <option value="herramientas">Herramientas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Cantidad Stock</label>
+                        <input type="number" id="cantidad" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio Unitario (COP)</label>
+                        <input type="number" id="precio" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ubicacion Almacen</label>
+                        <input type="text" id="ubicacion">
+                    </div>
+                    <div class="form-group">
+                        <label>Proveedor</label>
+                        <input type="text" id="proveedor">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Ingreso</label>
+                        <input type="date" id="fechaIngreso" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" id="submitBtn">Guardar Producto</button>
+                <button type="button" class="btn-secondary" onclick="hideAddForm()">Cancelar</button>
+            </form>
+        </div>
+
+        <div class="table-container">
+            <table id="inventarioTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Codigo</th>
+                        <th>Nombre</th>
+                        <th>Categoria</th>
+                        <th>Stock</th>
+                        <th>Precio</th>
+                        <th>Ubicacion</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="movPanel" class="form-panel" style="display:none;">
+            <h3>Movimientos de inventario &mdash; <span id="movProductoNombre"></span></h3>
+            <form id="movForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo de movimiento</label>
+                        <select id="movTipo" required>
+                            <option value="entrada">Entrada (ingreso de stock)</option>
+                            <option value="salida">Salida (retiro de stock)</option>
+                            <option value="ajuste">Ajuste (corregir stock fisico contado)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label id="movCantidadLabel">Cantidad</label>
+                        <input type="number" id="movCantidad" min="0" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Motivo</label>
+                    <input type="text" id="movMotivo" placeholder="Ej: Compra a proveedor, uso en mantenimiento OP-2024-002, conteo fisico...">
+                </div>
+                <button type="submit" class="btn-primary">Registrar Movimiento</button>
+                <button type="button" class="btn-secondary" onclick="cerrarMovPanel()">Cerrar</button>
+            </form>
+
+            <div id="movMensaje" class="message" style="display:none;"></div>
+
+            <h3 style="margin-top:20px;">Historial</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Cantidad</th>
+                            <th>Stock resultante</th>
+                            <th>Motivo</th>
+                            <th>Usuario</th>
+                        </tr>
+                    </thead>
+                    <tbody id="movHistorialBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'api/inventario';
+
+        async function loadInventario() {
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                if (data.success) renderTable(data.data);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderTable(productos) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = productos.map(p => `
+                <tr>
+                    <td>${p.id}</td>
+                    <td class="mono">${p.codigoProducto}</td>
+                    <td>${p.nombre}</td>
+                    <td><span class="cat-tag cat-${p.categoria}">${p.categoria}</span></td>
+                    <td>
+                        <div class="stock-cell">
+                            <span class="stock-num">${p.cantidadStock}</span>
+                            <span class="stock-bar"><span class="stock-bar-fill stock-${p.estado}" style="width:${Math.max(6, Math.min(100, (p.cantidadStock / Math.max(p.cantidadStock, p.cantidadMinima * 3)) * 100))}%"></span></span>
+                        </div>
+                    </td>
+                    <td>$${p.precioUnitario.toLocaleString()}</td>
+                    <td>${p.ubicacionAlmacen || '-'}</td>
+                    <td><span class="badge ${p.estado}">${p.estado}</span></td>
+                    <td>
+                        <button class="btn-small" onclick="editProduct(${p.id})">Editar</button>
+                        <button class="btn-small" onclick="verMovimientos(${p.id}, '${p.nombre.replace(/'/g, "\\'")}')">Movimientos</button>
+                        <button class="btn-small btn-danger" onclick="deleteProduct(${p.id})">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        let editingId = null;
+
+        function showAddForm() {
+            editingId = null;
+            document.getElementById('productForm').reset();
+            document.getElementById('formTitle').textContent = 'Agregar Producto';
+            document.getElementById('submitBtn').textContent = 'Guardar Producto';
+            document.getElementById('codigo').disabled = false;
+            document.getElementById('addForm').style.display = 'block';
+        }
+        function hideAddForm() {
+            editingId = null;
+            document.getElementById('addForm').style.display = 'none';
+        }
+
+        async function editProduct(id) {
+            try {
+                const res = await fetch(`${API_URL}/${id}`);
+                const data = await res.json();
+                if (!data.success) { alert(data.error || 'No se pudo cargar el producto'); return; }
+                const p = data.data;
+                editingId = id;
+                document.getElementById('formTitle').textContent = 'Editar Producto';
+                document.getElementById('submitBtn').textContent = 'Actualizar Producto';
+                document.getElementById('codigo').value = p.codigoProducto;
+                document.getElementById('codigo').disabled = true; // el codigo no se modifica una vez creado
+                document.getElementById('nombre').value = p.nombre;
+                document.getElementById('descripcion').value = p.descripcion || '';
+                document.getElementById('categoria').value = p.categoria;
+                document.getElementById('cantidad').value = p.cantidadStock;
+                document.getElementById('precio').value = p.precioUnitario;
+                document.getElementById('ubicacion').value = p.ubicacionAlmacen || '';
+                document.getElementById('proveedor').value = p.proveedor || '';
+                document.getElementById('fechaIngreso').value = (p.fechaIngreso || '').substring(0, 10);
+                document.getElementById('addForm').style.display = 'block';
+                window.scrollTo({ top: document.getElementById('addForm').offsetTop - 20, behavior: 'smooth' });
+            } catch (e) {
+                alert('Error de conexion al cargar el producto');
+            }
+        }
+
+        document.getElementById('productForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const producto = {
+                codigoProducto: document.getElementById('codigo').value,
+                nombre: document.getElementById('nombre').value,
+                descripcion: document.getElementById('descripcion').value,
+                categoria: document.getElementById('categoria').value,
+                cantidadStock: parseInt(document.getElementById('cantidad').value),
+                cantidadMinima: 10,
+                precioUnitario: parseFloat(document.getElementById('precio').value),
+                ubicacionAlmacen: document.getElementById('ubicacion').value,
+                proveedor: document.getElementById('proveedor').value,
+                fechaIngreso: document.getElementById('fechaIngreso').value
+            };
+
+            const esEdicion = editingId !== null;
+            const url = esEdicion ? `${API_URL}/${editingId}` : API_URL;
+            const metodo = esEdicion ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method: metodo,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(producto)
+                });
+                const data = await res.json();
+                if (data.success) { hideAddForm(); loadInventario(); }
+                else alert(data.error || 'Error');
+            } catch (e) { alert('Error de conexion'); }
+        });
+
+        async function deleteProduct(id) {
+            if (!confirm('Eliminar producto?')) return;
+            try {
+                const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) loadInventario();
+            } catch (e) { alert('Error'); }
+        }
+
+        function searchProducts() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+            });
+        }
+
+        // ---------- Movimientos de inventario (entrada / salida / ajuste) ----------
+        let movProductoId = null;
+
+        async function verMovimientos(id, nombre) {
+            movProductoId = id;
+            document.getElementById('movProductoNombre').textContent = nombre;
+            document.getElementById('movForm').reset();
+            document.getElementById('movMensaje').style.display = 'none';
+            document.getElementById('movPanel').style.display = 'block';
+            actualizarLabelCantidad();
+            await cargarHistorialMovimientos();
+            window.scrollTo({ top: document.getElementById('movPanel').offsetTop - 20, behavior: 'smooth' });
+        }
+
+        function cerrarMovPanel() {
+            movProductoId = null;
+            document.getElementById('movPanel').style.display = 'none';
+        }
+
+        document.getElementById('movTipo').addEventListener('change', actualizarLabelCantidad);
+        function actualizarLabelCantidad() {
+            const tipo = document.getElementById('movTipo').value;
+            document.getElementById('movCantidadLabel').textContent =
+                tipo === 'ajuste' ? 'Nuevo stock total (conteo fisico)' : 'Cantidad';
+        }
+
+        async function cargarHistorialMovimientos() {
+            try {
+                const res = await fetch(`${API_URL}/movimientos/${movProductoId}`);
+                const data = await res.json();
+                const tbody = document.getElementById('movHistorialBody');
+                if (!data.success || !data.data || data.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Aun no hay movimientos registrados para este producto</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.data.map(m => `
+                    <tr>
+                        <td>${m.fechaMovimiento}</td>
+                        <td><span class="badge ${m.tipoMovimiento === 'salida' ? 'egreso' : 'ingreso'}">${m.tipoMovimiento}</span></td>
+                        <td>${m.cantidad}</td>
+                        <td>${m.stockResultante}</td>
+                        <td>${m.motivo || '-'}</td>
+                        <td>${m.usuario}</td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Error cargando historial:', e);
+            }
+        }
+
+        document.getElementById('movForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const movimiento = {
+                productoId: movProductoId,
+                tipoMovimiento: document.getElementById('movTipo').value,
+                cantidad: parseInt(document.getElementById('movCantidad').value),
+                motivo: document.getElementById('movMotivo').value
+            };
+
+            const msg = document.getElementById('movMensaje');
+            try {
+                const res = await fetch(`${API_URL}/movimiento`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(movimiento)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    msg.className = 'message success';
+                    msg.textContent = 'Movimiento registrado. Stock resultante: ' + data.data.stockResultante;
+                    msg.style.display = 'block';
+                    document.getElementById('movForm').reset();
+                    actualizarLabelCantidad();
+                    cargarHistorialMovimientos();
+                    loadInventario();
+                } else {
+                    msg.className = 'message error';
+                    msg.textContent = data.error || 'No fue posible registrar el movimiento';
+                    msg.style.display = 'block';
+                }
+            } catch (e) {
+                msg.className = 'message error';
+                msg.textContent = 'No fue posible conectar con el servidor. Intentelo nuevamente.';
+                msg.style.display = 'block';
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('user');
+            fetch('api/auth/logout');
+            window.location.href = 'index.html';
+        }
+
+        const __user = localStorage.getItem('user');
+        if (!__user) window.location.href = 'login.html';
+        else {
+            const __u = JSON.parse(__user);
+            if (__u.rol === 'admin') {
+                const navAud = document.getElementById('navAuditoria');
+                if (navAud) navAud.style.display = 'inline';
+                const navNom = document.getElementById('navNomina');
+                if (navNom) navNom.style.display = 'inline';
+            }
+        }
+        loadInventario();
+    </script>
+</body>
+</html>

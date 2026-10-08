@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria - Vessel Technology SAS</title>
+    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="img/favicon-32.png" type="image/png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <span class="icon"><img src="img/emblema-navbar.png" alt="Vessel Tecnology SAS"></span>
+            <span>Vessel Technology SAS</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="inventario.html">Inventario</a></li>
+            <li><a href="contabilidad.html">Contabilidad</a></li>
+            <li><a href="operaciones.html">Operaciones</a></li>
+            <li><a href="nomina.html" id="navNomina" style="display:none;">Nomina</a></li>
+            <li><a href="auditoria.html" class="active">Auditoria</a></li>
+            <li><a href="#" onclick="logout()">Salir</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-container">
+        <h1>Auditoria del Sistema</h1>
+        <p class="subtitle">Bitacora de trazabilidad: quien hizo que, en que modulo y cuando</p>
+
+        <div class="actions-bar">
+            <input type="text" id="searchInput" placeholder="Buscar por usuario, accion o modulo..." onkeyup="filtrar()">
+            <button class="btn-secondary" onclick="cargarAuditoria()">Actualizar</button>
+        </div>
+
+        <div id="mensajeAcceso" class="message error" style="display:none;"></div>
+
+        <div class="table-container">
+            <table id="auditoriaTable">
+                <thead>
+                    <tr>
+                        <th>Fecha y hora</th>
+                        <th>Usuario</th>
+                        <th>Accion</th>
+                        <th>Modulo</th>
+                        <th>Registro afectado</th>
+                        <th>Descripcion</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function cargarAuditoria() {
+            try {
+                const res = await fetch('api/auditoria');
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('mensajeAcceso').style.display = 'none';
+                    renderTable(data.data);
+                } else {
+                    document.getElementById('tableBody').innerHTML = '';
+                    const msg = document.getElementById('mensajeAcceso');
+                    msg.textContent = data.error || 'No fue posible cargar la auditoria.';
+                    msg.style.display = 'block';
+                }
+            } catch (e) {
+                console.error('Error cargando auditoria:', e);
+                const msg = document.getElementById('mensajeAcceso');
+                msg.textContent = 'No fue posible conectar con el servidor. Intentelo nuevamente.';
+                msg.style.display = 'block';
+            }
+        }
+
+        function renderTable(registros) {
+            const tbody = document.getElementById('tableBody');
+            if (!registros || registros.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Aun no hay registros de auditoria</td></tr>';
+                return;
+            }
+            tbody.innerHTML = registros.map(r => `
+                <tr>
+                    <td>${r.fechaHora}</td>
+                    <td>${r.usuario}</td>
+                    <td><span class="badge ${claseBadge(r.accion)}">${r.accion}</span></td>
+                    <td>${r.modulo}</td>
+                    <td>${r.registroAfectado || '-'}</td>
+                    <td>${r.descripcion || '-'}</td>
+                    <td>${r.ip || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function claseBadge(accion) {
+            if (accion.includes('FALLIDO') || accion.startsWith('ELIMINAR')) return 'cancelada';
+            if (accion.startsWith('LOGIN') || accion.startsWith('CREAR') || accion.startsWith('ENTRADA')) return 'completada';
+            if (accion.startsWith('SALIDA') || accion.startsWith('ACTUALIZAR') || accion.startsWith('AJUSTE')) return 'pendiente';
+            return 'planificada';
+        }
+
+        function filtrar() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('#tableBody tr').forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            fetch('api/auth/logout');
+            window.location.href = 'index.html';
+        }
+
+        const user = localStorage.getItem('user');
+        if (!user) window.location.href = 'login.html';
+        else {
+            const u = JSON.parse(user);
+            if (u.rol === 'admin') {
+                const navNom = document.getElementById('navNomina');
+                if (navNom) navNom.style.display = 'inline';
+            }
+        }
+
+        cargarAuditoria();
+    </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Vessel Tecnology SAS</title>
+    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="img/favicon-32.png" type="image/png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <span class="icon"><img src="img/emblema-navbar.png" alt="Vessel Tecnology SAS"></span>
+            <span>Vessel Tecnology SAS</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="login.html" class="active">Login</a></li>
+        </ul>
+    </nav>
+
+    <div class="login-container">
+        <div class="login-box">
+            <img src="img/sello-completo-claro.png" alt="Vessel Tecnology SAS" class="login-seal">
+            <h2>Iniciar Sesion</h2>
+            <p>Seguridad Electronica, Redes y Telecomunicaciones</p>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" id="username" placeholder="Ej: admin" required>
+                </div>
+                <div class="form-group">
+                    <label>Contrasena</label>
+                    <input type="password" id="password" placeholder="Ej: admin123" required>
+                </div>
+                <button type="submit" class="btn-login">Ingresar</button>
+            </form>
+
+            <div id="loginMessage" class="message"></div>
+
+            <div class="login-info">
+                <p><strong>Usuario demo:</strong> admin</p>
+                <p><strong>Contrasena:</strong> admin123</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const msgDiv = document.getElementById('loginMessage');
+
+            // URL relativa dinámica para que tome automáticamente /vessel-tecnology-web-v2
+
+const apiUrl = 'api/auth/login';
+
+try {
+    const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    msgDiv.className = 'message success';
+                    msgDiv.textContent = 'Autenticacion satisfactoria. Redirigiendo...';
+                    localStorage.setItem('user', JSON.stringify(data.data));
+                    setTimeout(() => window.location.href = 'dashboard.html', 1500);
+                } else {
+                    msgDiv.className = 'message error';
+                    msgDiv.textContent = data.error || 'Error en la autenticacion';
+                }
+            } catch (error) {
+                msgDiv.className = 'message error';
+                msgDiv.textContent = 'Error de conexion con el servidor';
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Vessel Technology SAS</title>
+    <link rel="stylesheet" href="css/style.css?v=4">
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="img/favicon-32.png" type="image/png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <script src="js/chart.umd.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <span class="icon"><img src="img/emblema-navbar.png" alt="Vessel Tecnology SAS"></span>
+            <span>Vessel Technology SAS</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="dashboard.html" class="active">Dashboard</a></li>
+            <li><a href="inventario.html">Inventario</a></li>
+            <li><a href="contabilidad.html">Contabilidad</a></li>
+            <li><a href="operaciones.html">Operaciones</a></li>
+            <li><a href="nomina.html" id="navNomina" style="display:none;">Nomina</a></li>
+            <li><a href="auditoria.html" id="navAuditoria" style="display:none;">Auditoria</a></li>
+            <li><a href="#" onclick="logout()">Salir</a></li>
+        </ul>
+    </nav>
+
+    <div class="dashboard-container">
+        <h1>Panel Principal - Dashboard Consolidado</h1>
+        <p class="subtitle">Resumen integrado de todos los modulos</p>
+
+        <div class="stats-grid stats-grid-6">
+            <div class="stat-card blue">
+                <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg></div>
+                <h3>Productos Activos</h3>
+                <div class="stat-value" id="prodActivos">-</div>
+                <p>En inventario</p>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+                <h3>Bajo Stock</h3>
+                <div class="stat-value" id="prodBajo">-</div>
+                <p>Requieren atencion</p>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+                <h3>Total Ingresos</h3>
+                <div class="stat-value" id="totalIngresos">-</div>
+                <p>COP</p>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+                <h3>Total Egresos</h3>
+                <div class="stat-value" id="totalEgresos">-</div>
+                <p>COP</p>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-6 3 3 5-7"/></svg></div>
+                <h3>Balance</h3>
+                <div class="stat-value" id="balance">-</div>
+                <p>COP</p>
+            </div>
+            <div class="stat-card teal">
+                <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="13" height="9" rx="2"/><path d="M15 9.5l5.5-3v11l-5.5-3"/></svg></div>
+                <h3>Operaciones Activas</h3>
+                <div class="stat-value" id="opActivas">-</div>
+                <p>En proceso</p>
+            </div>
+        </div>
+
+        <div class="charts-row">
+            <div class="section chart-section">
+                <h2>Estado de Operaciones</h2>
+                <div class="chart-wrap"><canvas id="chartOperaciones"></canvas></div>
+            </div>
+            <div class="section chart-section">
+                <h2>Estado del Inventario</h2>
+                <div class="chart-wrap"><canvas id="chartInventario"></canvas></div>
+            </div>
+            <div class="section chart-section">
+                <h2>Resumen Financiero</h2>
+                <div class="chart-wrap"><canvas id="chartFinanciero"></canvas></div>
+            </div>
+        </div>
+
+        <div class="dashboard-sections">
+            <div class="section">
+                <h2>Inventario Reciente</h2>
+                <div id="inventarioPreview"></div>
+            </div>
+            <div class="section">
+                <h2>Operaciones Recientes</h2>
+                <div id="operacionesPreview"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const COLORS = { navy:'#1B3A5C', brass:'#B8843C', success:'#2E7D5B', danger:'#AB4531', warning:'#B8843C', info:'#3E6E8E', steel:'#8CA0B3', purple:'#6E5A8C' };
+
+        function money(v) {
+            return '$' + Number(v || 0).toLocaleString('es-CO', {maximumFractionDigits: 0});
+        }
+
+        async function loadDashboard() {
+            try {
+                const res = await fetch('api/dashboard');
+                const data = await res.json();
+
+                if (data.success) {
+                    const d = data.data;
+                    document.getElementById('prodActivos').textContent = d.inventario.totalProductos;
+                    document.getElementById('prodBajo').textContent = d.inventario.productosBajoStock;
+                    document.getElementById('totalIngresos').textContent = money(d.contabilidad.totalIngresos);
+                    document.getElementById('totalEgresos').textContent = money(d.contabilidad.totalEgresos);
+                    document.getElementById('balance').textContent = money(d.contabilidad.balance);
+                    document.getElementById('opActivas').textContent = d.operaciones.activas;
+
+                    renderChartFinanciero(d.contabilidad.totalIngresos, d.contabilidad.totalEgresos, d.contabilidad.balance);
+                }
+
+                const invRes = await fetch('api/inventario');
+                const invData = await invRes.json();
+                if (invData.success) {
+                    let html = '<div class="table-container"><table><tr><th>Codigo</th><th>Nombre</th><th>Stock</th><th>Estado</th></tr>';
+                    invData.data.slice(0, 5).forEach(p => {
+                        html += `<tr><td>${p.codigoProducto}</td><td class="truncate" title="${p.nombre}">${p.nombre}</td><td>${p.cantidadStock}</td><td><span class="badge ${p.estado}">${p.estado}</span></td></tr>`;
+                    });
+                    html += '</table></div>';
+                    document.getElementById('inventarioPreview').innerHTML = html;
+
+                    renderChartInventario(invData.data);
+                }
+
+                const opRes = await fetch('api/operaciones');
+                const opData = await opRes.json();
+                if (opData.success) {
+                    let html = '<div class="table-container"><table><tr><th>Codigo</th><th>Sitio</th><th>Estado</th><th>Prioridad</th></tr>';
+                    opData.data.slice(0, 5).forEach(o => {
+                        html += `<tr><td>${o.codigoOperacion}</td><td class="truncate" title="${o.nombreSitio}">${o.nombreSitio}</td><td><span class="badge ${o.estado}">${o.estado.replace('_',' ')}</span></td><td><span class="badge ${o.prioridad}">${o.prioridad}</span></td></tr>`;
+                    });
+                    html += '</table></div>';
+                    document.getElementById('operacionesPreview').innerHTML = html;
+
+                    renderChartOperaciones(opData.data);
+                }
+            } catch (e) {
+                console.error('Error cargando dashboard:', e);
+            }
+        }
+
+        function renderChartOperaciones(operaciones) {
+            const estados = ['planificada','en_proceso','completada','cancelada'];
+            const labels = ['Planificada','En proceso','Completada','Cancelada'];
+            const counts = estados.map(e => operaciones.filter(o => o.estado === e).length);
+            new Chart(document.getElementById('chartOperaciones'), {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data: counts, backgroundColor: [COLORS.steel, COLORS.info, COLORS.success, COLORS.danger], borderWidth: 0 }] },
+                options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }, cutout: '62%' }
+            });
+        }
+
+        function renderChartInventario(productos) {
+            const estados = ['disponible','bajo_stock','agotado'];
+            const labels = ['Disponible','Bajo stock','Agotado'];
+            const counts = estados.map(e => productos.filter(p => p.estado === e).length);
+            new Chart(document.getElementById('chartInventario'), {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data: counts, backgroundColor: [COLORS.success, COLORS.warning, COLORS.danger], borderWidth: 0 }] },
+                options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }, cutout: '62%' }
+            });
+        }
+
+        function renderChartFinanciero(ingresos, egresos, balance) {
+            new Chart(document.getElementById('chartFinanciero'), {
+                type: 'bar',
+                data: {
+                    labels: ['Ingresos', 'Egresos', 'Balance'],
+                    datasets: [{ data: [ingresos, egresos, balance], backgroundColor: [COLORS.success, COLORS.danger, balance >= 0 ? COLORS.navy : COLORS.danger], borderRadius: 4 }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { y: { ticks: { callback: v => '$' + (v/1000000).toFixed(1) + 'M' } } }
+                }
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            fetch('api/auth/logout');
+            window.location.href = 'index.html';
+        }
+
+        const user = localStorage.getItem('user');
+        if (!user) window.location.href = 'login.html';
+        else {
+            const u = JSON.parse(user);
+            if (u.rol === 'admin') {
+                const navAud = document.getElementById('navAuditoria');
+                if (navAud) navAud.style.display = 'inline';
+                const navNom = document.getElementById('navNomina');
+                if (navNom) navNom.style.display = 'inline';
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>

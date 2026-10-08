@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operaciones - Vessel Technology SAS</title>
+    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="img/favicon-32.png" type="image/png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <span class="icon"><img src="img/emblema-navbar.png" alt="Vessel Tecnology SAS"></span>
+            <span>Vessel Technology SAS</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="inventario.html">Inventario</a></li>
+            <li><a href="contabilidad.html">Contabilidad</a></li>
+            <li><a href="operaciones.html" class="active">Operaciones</a></li>
+            <li><a href="nomina.html" id="navNomina" style="display:none;">Nomina</a></li>
+            <li><a href="auditoria.html" id="navAuditoria" style="display:none;">Auditoria</a></li>
+            <li><a href="#" onclick="logout()">Salir</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-container">
+        <h1>Modulo de Operaciones</h1>
+        <p class="subtitle">Instalacion, mantenimiento y soporte de sistemas de seguridad electronica y redes</p>
+
+        <div class="actions-bar">
+            <button class="btn-primary" onclick="showAddForm()">+ Nueva Operacion</button>
+        </div>
+
+        <div id="addForm" class="form-panel" style="display:none;">
+            <h3>Programar Operacion</h3>
+            <form id="opForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Codigo Operacion</label>
+                        <input type="text" id="codOp" placeholder="OP-2024-XXX" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="tipoOp">
+                            <option value="mantenimiento">Mantenimiento</option>
+                            <option value="reparacion">Reparacion</option>
+                            <option value="instalacion">Instalacion</option>
+                            <option value="inspeccion">Inspeccion</option>
+                            <option value="fabricacion">Fabricacion</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sitio / Instalacion</label>
+                        <input type="text" id="sitio" placeholder="Ej: Centro Comercial Unicentro" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <input type="text" id="cliente" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Descripcion</label>
+                    <textarea id="descOp" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Fecha Inicio</label>
+                        <input type="date" id="fechaInicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Fin Estimada</label>
+                        <input type="date" id="fechaFin">
+                    </div>
+                    <div class="form-group">
+                        <label>Prioridad</label>
+                        <select id="prioridad">
+                            <option value="baja">Baja</option>
+                            <option value="media">Media</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Responsable</label>
+                        <input type="text" id="responsableOp">
+                    </div>
+                    <div class="form-group">
+                        <label>Costo Estimado (COP)</label>
+                        <input type="number" id="costoEst">
+                    </div>
+                    <div class="form-group">
+                        <label>Ubicacion</label>
+                        <input type="text" id="ubicacionOp">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">Programar</button>
+                <button type="button" class="btn-secondary" onclick="hideAddForm()">Cancelar</button>
+            </form>
+        </div>
+
+        <div class="table-container">
+            <table id="opTable">
+                <thead>
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Tipo</th>
+                        <th>Sitio</th>
+                        <th>Cliente</th>
+                        <th>Estado</th>
+                        <th>Prioridad</th>
+                        <th>Fecha Inicio</th>
+                        <th>Costo Est.</th>
+                        <th>Ubicacion</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="cronoPanel" class="form-panel" style="display:none;">
+            <h3>Cronograma de ejecucion &mdash; <span id="cronoCodigo"></span></h3>
+            <p class="subtitle" id="cronoSitio" style="margin-bottom:16px;"></p>
+
+            <div class="timeline-stepper" id="timelineStepper"></div>
+
+            <form id="cronoForm" style="margin-top:24px;">
+                <input type="hidden" id="cronoId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Estado actual</label>
+                        <select id="cronoEstado">
+                            <option value="planificada">Planificada</option>
+                            <option value="en_proceso">En proceso</option>
+                            <option value="completada">Completada</option>
+                            <option value="cancelada">Cancelada</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Prioridad</label>
+                        <select id="cronoPrioridad">
+                            <option value="baja">Baja</option>
+                            <option value="media">Media</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Fecha fin estimada</label>
+                        <input type="date" id="cronoFechaFinEst">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha fin real</label>
+                        <input type="date" id="cronoFechaFinReal">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Costo estimado (COP)</label>
+                        <input type="number" id="cronoCostoEst">
+                    </div>
+                    <div class="form-group">
+                        <label>Costo / precio final (COP)</label>
+                        <input type="number" id="cronoCostoReal">
+                    </div>
+                    <div class="form-group">
+                        <label>Responsable</label>
+                        <input type="text" id="cronoResponsable">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Descripcion / notas de avance</label>
+                    <textarea id="cronoDescripcion"></textarea>
+                </div>
+                <button type="submit" class="btn-primary">Guardar Avance</button>
+                <button type="button" class="btn-secondary" onclick="cerrarCronograma()">Cerrar</button>
+            </form>
+            <div id="cronoMensaje" class="message" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'api/operaciones';
+
+        async function loadData() {
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('tableBody').innerHTML = data.data.map(o => `
+                        <tr>
+                            <td class="mono">${o.codigoOperacion}</td>
+                            <td>${o.tipoOperacion}</td>
+                            <td>${o.nombreSitio}</td>
+                            <td>${o.cliente}</td>
+                            <td><span class="badge ${o.estado}">${o.estado.replace('_',' ')}</span></td>
+                            <td><span class="badge ${o.prioridad}">${o.prioridad}</span></td>
+                            <td>${o.fechaInicio}</td>
+                            <td>$${o.costoEstimado ? o.costoEstimado.toLocaleString() : '0'}</td>
+                            <td>${o.ubicacion || '-'}</td>
+                            <td><button class="btn-small" onclick="verCronograma(${o.id})">Cronograma</button></td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function showAddForm() { document.getElementById('addForm').style.display = 'block'; }
+        function hideAddForm() { document.getElementById('addForm').style.display = 'none'; }
+
+        // ---------- Cronograma de ejecucion ----------
+        const ETAPAS = [
+            { key: 'planificada', label: 'Planificada' },
+            { key: 'en_proceso', label: 'En proceso' },
+            { key: 'completada', label: 'Completada' }
+        ];
+
+        async function verCronograma(id) {
+            try {
+                const res = await fetch(`${API_URL}/${id}`);
+                const data = await res.json();
+                if (!data.success) { alert(data.error || 'No se pudo cargar la operacion'); return; }
+                const o = data.data;
+
+                document.getElementById('cronoId').value = o.id;
+                document.getElementById('cronoCodigo').textContent = o.codigoOperacion;
+                document.getElementById('cronoSitio').textContent = o.nombreSitio + ' - ' + o.cliente;
+                document.getElementById('cronoEstado').value = o.estado;
+                document.getElementById('cronoPrioridad').value = o.prioridad;
+                document.getElementById('cronoFechaFinEst').value = o.fechaFinEstimada || '';
+                document.getElementById('cronoFechaFinReal').value = o.fechaFinReal || '';
+                document.getElementById('cronoCostoEst').value = o.costoEstimado || 0;
+                document.getElementById('cronoCostoReal').value = o.costoReal || 0;
+                document.getElementById('cronoResponsable').value = o.responsable || '';
+                document.getElementById('cronoDescripcion').value = o.descripcion || '';
+                document.getElementById('cronoMensaje').style.display = 'none';
+
+                renderStepper(o);
+                document.getElementById('cronoPanel').style.display = 'block';
+                window.scrollTo({ top: document.getElementById('cronoPanel').offsetTop - 20, behavior: 'smooth' });
+            } catch (e) {
+                alert('Error de conexion al cargar la operacion');
+            }
+        }
+
+        function renderStepper(o) {
+            const wrap = document.getElementById('timelineStepper');
+            if (o.estado === 'cancelada') {
+                wrap.innerHTML = `<div class="stepper-cancelada">Operacion CANCELADA. Fecha inicio: ${o.fechaInicio}</div>`;
+                return;
+            }
+            const idxActual = ETAPAS.findIndex(e => e.key === o.estado);
+            const fechas = { planificada: o.fechaInicio, en_proceso: o.fechaInicio, completada: o.fechaFinReal || o.fechaFinEstimada };
+
+            wrap.innerHTML = ETAPAS.map((e, i) => {
+                let cls = 'step-pending';
+                if (i < idxActual) cls = 'step-done';
+                else if (i === idxActual) cls = 'step-current';
+                return `
+                    <div class="step ${cls}">
+                        <div class="step-dot"></div>
+                        <div class="step-label">${e.label}</div>
+                        <div class="step-date">${i <= idxActual ? (fechas[e.key] || '') : ''}</div>
+                    </div>
+                    ${i < ETAPAS.length - 1 ? `<div class="step-line ${i < idxActual ? 'line-done' : ''}"></div>` : ''}
+                `;
+            }).join('');
+        }
+
+        function cerrarCronograma() {
+            document.getElementById('cronoPanel').style.display = 'none';
+        }
+
+        document.getElementById('cronoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('cronoId').value;
+            const payload = {
+                estado: document.getElementById('cronoEstado').value,
+                prioridad: document.getElementById('cronoPrioridad').value,
+                fechaFinEstimada: document.getElementById('cronoFechaFinEst').value,
+                fechaFinReal: document.getElementById('cronoFechaFinReal').value,
+                costoEstimado: parseFloat(document.getElementById('cronoCostoEst').value) || 0,
+                costoReal: parseFloat(document.getElementById('cronoCostoReal').value) || 0,
+                responsable: document.getElementById('cronoResponsable').value,
+                descripcion: document.getElementById('cronoDescripcion').value
+            };
+            const msg = document.getElementById('cronoMensaje');
+            try {
+                const res = await fetch(`${API_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    msg.className = 'message success';
+                    msg.textContent = 'Cronograma actualizado correctamente';
+                    msg.style.display = 'block';
+                    renderStepper(data.data);
+                    loadData();
+                } else {
+                    msg.className = 'message error';
+                    msg.textContent = data.error || 'No fue posible guardar los cambios';
+                    msg.style.display = 'block';
+                }
+            } catch (e) {
+                msg.className = 'message error';
+                msg.textContent = 'No fue posible conectar con el servidor';
+                msg.style.display = 'block';
+            }
+        });
+
+        document.getElementById('opForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const op = {
+                codigoOperacion: document.getElementById('codOp').value,
+                tipoOperacion: document.getElementById('tipoOp').value,
+                nombreSitio: document.getElementById('sitio').value,
+                cliente: document.getElementById('cliente').value,
+                descripcion: document.getElementById('descOp').value,
+                fechaInicio: document.getElementById('fechaInicio').value,
+                fechaFinEstimada: document.getElementById('fechaFin').value,
+                estado: 'planificada',
+                prioridad: document.getElementById('prioridad').value,
+                responsable: document.getElementById('responsableOp').value,
+                costoEstimado: parseFloat(document.getElementById('costoEst').value) || 0,
+                ubicacion: document.getElementById('ubicacionOp').value
+            };
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(op)
+                });
+                const data = await res.json();
+                if (data.success) { hideAddForm(); loadData(); }
+                else alert(data.error || 'Error');
+            } catch (e) { alert('Error de conexion'); }
+        });
+
+        function logout() {
+            localStorage.removeItem('user');
+            fetch('api/auth/logout');
+            window.location.href = 'index.html';
+        }
+
+        const __user = localStorage.getItem('user');
+        if (!__user) window.location.href = 'login.html';
+        else {
+            const __u = JSON.parse(__user);
+            if (__u.rol === 'admin') {
+                const navAud = document.getElementById('navAuditoria');
+                if (navAud) navAud.style.display = 'inline';
+                const navNom = document.getElementById('navNomina');
+                if (navNom) navNom.style.display = 'inline';
+            }
+        }
+        loadData();
+    </script>
+</body>
+</html>
